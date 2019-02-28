@@ -1,94 +1,38 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/joho/godotenv"
-	"github.com/sendgrid/sendgrid-go"
 	"log"
 	"os"
+
+	"github.com/sendgrid/sendgrid-go"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
-type Mail struct {
-	Subject          string             `json:"subject"`
-	Personalizations []Personalizations `json:"personalizations"`
-	From             MailUser           `json:"from"`
-	Content          []Contents         `json:"content"`
-}
-
-type Personalizations struct {
-	To []MailUser `json:"to"`
-}
-
-type MailUser struct {
-	Email string `json:"email"`
-	Name  string `json:"name"`
-}
-
-type Contents struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
-}
-
 func main() {
-
-	err := godotenv.Load()
+	err := godotenv.Load(".env")
 	if err != nil {
 		log.Println(err)
 	}
 
-	subject := "test mail"
-	contents := "test mail from sendgrid"
-
-	apiKey := os.Getenv("API_KEY")
-	host := "https://api.sendgrid.com"
-	endpoint := "/v3/mail/send"
-
-	request := sendgrid.GetRequest(apiKey, endpoint, host)
-	request.Method = "POST"
-
-	mail := Mail{
-		Subject: subject,
-		Personalizations: []Personalizations{
-			{To: []MailUser{{
-				Email: os.Getenv("RECEIVER_ADDRESS1"),
-				Name:  os.Getenv("RECEIVER_NAME1"),
-			},
-				{
-					Email: os.Getenv("RECEIVER_ADDRESS2"),
-					Name:  os.Getenv("RECEIVER_NAME2"),
-				},
-			}}},
-		From: MailUser{
-			Email: os.Getenv("SENDER_ADDRESS"),
-			Name:  os.Getenv("SENDER_NAME"),
-		},
-		Content: []Contents{{
-			Type:  "text/plain",
-			Value: contents,
-		}},
-	}
-
-	data, err := json.Marshal(mail)
-
-	log.Println(string(data))
-
+	from := mail.NewEmail("Example User", "soichi.sumi@gmail.com")
+	subject := "Sending with SendGrid is Fun"
+	to := mail.NewEmail("Example User", "atom.soichi0407@gmail.com")
+	plainTextContent := "and easy to do anywhere, even with Go"
+	htmlContent := "<strong>and easy to do anywhere, even with Go</strong>"
+	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+	fmt.Println(os.Getenv("SENDGRID_API_KEY"))
+	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
+	response, err := client.Send(message)
 	if err != nil {
+		println("error")
 		log.Println(err)
+		return
 	}
 
-	request.Body = data
-
-	response, err := sendgrid.API(request)
-	if err != nil {
-		log.Println(err)
-	} else {
-		fmt.Println(response.StatusCode)
-		fmt.Println(response.Body)
-		fmt.Println(response.Headers)
-	}
-}
-
-func SendMail(subject, contents string) {
-
+	println("succeeded")
+	fmt.Println(response.StatusCode)
+	fmt.Println(response.Body)
+	fmt.Println(response.Headers)
 }
