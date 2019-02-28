@@ -37,14 +37,9 @@ func main() {
 		log.Println(err)
 	}
 
-	subject := "テスト"
-	contents := "テストですよ"
+	subject := "test mail"
+	contents := "test mail from sendgrid"
 
-	SendMail(subject, contents)
-}
-
-// メールの中身を作成して、メールを送信する
-func SendMail(subject, contents string) {
 	apiKey := os.Getenv("API_KEY")
 	host := "https://api.sendgrid.com"
 	endpoint := "/v3/mail/send"
@@ -52,7 +47,6 @@ func SendMail(subject, contents string) {
 	request := sendgrid.GetRequest(apiKey, endpoint, host)
 	request.Method = "POST"
 
-	// メールの内容をJSONで作成する
 	mail := Mail{
 		Subject: subject,
 		Personalizations: []Personalizations{
@@ -93,4 +87,8 @@ func SendMail(subject, contents string) {
 		fmt.Println(response.Body)
 		fmt.Println(response.Headers)
 	}
+}
+
+func SendMail(subject, contents string) {
+
 }
